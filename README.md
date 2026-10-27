@@ -1,35 +1,19 @@
-# Net Atlas — Android 16
+# Net Atlas — Android 16 prototype
 
-Приложение показывает, к каким серверам обращаются приложения на телефоне.
+This is a new Android Studio project, not a modified Spy Monitor APK. It contains:
+- Android 16 / API 36 project configuration
+- MAP and LIST tabs
+- Installed-app listing using package visibility permission
+- OpenStreetMap world map and current-device location marker (after location permission)
+- Explicit UI status that live network destinations are not yet monitored
 
-- **MAP** — карта мира (OpenStreetMap): синяя точка — ваше устройство, линии — к серверам, адреса которых запрашивали приложения. Цвет линии зависит от приложения.
-- **LIST** — установленные приложения. Нажмите на приложение: увидите хосты, IP и страны; кнопка «Показать на карте» оставит на карте только его.
+## Important limitation
+This prototype does **not** yet inspect per-app remote IP addresses or draw destination-country lines. Android does not expose this information to an ordinary app through the installed-app list or standard permissions. A production implementation needs a consent-based `VpnService` plus a packet-forwarding backend; simply routing traffic into a VPN without forwarding it would break connectivity, so no such incomplete service is enabled here. IP geolocation would also need a provider and privacy disclosure.
 
-## Как это работает (и чего оно НЕ умеет)
+## Build
+Open this folder in Android Studio with Android SDK Platform 36 installed. Let Gradle sync, then Build > Build APK(s). The build environment used to prepare this source archive did not have Android SDK / Gradle installed, so this project has not been compiled or device-tested here.
 
-Android 10+ закрыл приложениям доступ к `/proc/net`, поэтому старый способ (Spy Monitor) не работает.
-Net Atlas поднимает **локальный VPN, в который направлен только DNS** (адрес 10.77.0.2). Остальной трафик идёт как обычно.
-Сервис пересылает DNS-запрос настоящему DNS-серверу вашей сети, запоминает, какое приложение (по UID сокета) и какой адрес запросило, и возвращает ответ.
-
-Ограничения:
-- Видны только адреса, полученные через **DNS**. Соединения по «зашитым» IP, DNS-over-HTTPS внутри приложения (например, в Chrome/Firefox) и Private DNS в строгом режиме не видны.
-- **Если интернет пропал при включённом мониторинге**: Настройки → Сеть → Private DNS → «Автоматически» или «Выключено».
-- Определение приложения по UID зависит от версии Android: часть запросов может попасть в строку «Система / не определено».
-- Страна и координаты IP определяются приблизительно, это положение сервера/провайдера, не обязательно дата-центра.
-- Данные хранятся только в памяти и пропадают при закрытии приложения.
-
-## Приватность
-
-- На собственные серверы ничего не отправляется (их нет).
-- Если включена галочка «Страна по IP», **IP-адреса серверов** (без названий приложений и хостов) отправляются сервису `get.geojs.io` по HTTPS. Снимите галочку — геолокации не будет, точек на карте тоже.
-- Карта грузит тайлы OpenStreetMap и библиотеку Leaflet (unpkg.com), нужен интернет.
-- Геолокация устройства используется только для синей точки.
-- `QUERY_ALL_PACKAGES` нужен для списка приложений. Для публикации в Google Play потребуется обоснование.
-
-## Сборка
-
-**Вариант 1: Android Studio.** Откройте папку проекта, установите Android SDK Platform 36, дождитесь синхронизации Gradle, затем Build → Build APK(s). Файл: `app/build/outputs/apk/debug/app-debug.apk`.
-
-**Вариант 2: GitHub Actions (без установки чего-либо).** Создайте пустой репозиторий на github.com, загрузите содержимое этой папки (вместе с `.github`), откройте вкладку Actions → «Build APK» → Run workflow. Через несколько минут APK появится в разделе Artifacts.
-
-Проект не компилировался с настоящим Android SDK и не запускался на устройстве; код проверен на компиляцию с заглушками API, а разбор DNS и сборка IP/UDP-пакетов проверены тестами.
+## Privacy / map
+- Location is requested at runtime and is only used to show the device marker.
+- The map uses OpenStreetMap tiles and Leaflet from their public HTTPS endpoints, so map rendering needs internet access.
+- `QUERY_ALL_PACKAGES` is included for a sideloaded personal-use app so the app list can include installed packages. Distribution through Google Play would require policy review.
