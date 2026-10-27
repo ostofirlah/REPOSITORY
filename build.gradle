@@ -1,14 +1,3 @@
-plugins { id 'com.android.application' }
-
-android {
-    namespace 'org.netatlas.monitor'
-    compileSdk 36
-
-    defaultConfig {
-        applicationId 'org.netatlas.monitor'
-        minSdk 26
-        targetSdk 36
-        versionCode 1
-        versionName '0.1-prototype'
-    }
+plugins {
+    id 'com.android.application' version '8.9.2' apply false
 }
